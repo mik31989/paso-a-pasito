@@ -1,0 +1,14 @@
+<header class="encabezado">
+  <div class="encabezado-marca">🚶‍♂️ <strong>Paso a Pasito</strong></div>
+  <nav class="encabezado-nav">
+    <span class="encabezado-usuario">Hola, <%= usuario.nombre %></span>
+    <% if (usuario.rol === 'admin') { %>
+      <a href="/admin" class="<%= activo === 'admin' ? 'nav-activo' : '' %>">Panel de administración</a>
+    <% } else { %>
+      <a href="/dashboard" class="<%= activo === 'dashboard' ? 'nav-activo' : '' %>">Mi calendario</a>
+    <% } %>
+    <form method="POST" action="/logout" class="form-logout">
+      <button type="submit" class="btn btn-link">Cerrar sesión</button>
+    </form>
+  </nav>
+</header>

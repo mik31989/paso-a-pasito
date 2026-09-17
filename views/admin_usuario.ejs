@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paso a Pasito · <%= objetivo.nombre %></title>
+  <link rel="stylesheet" href="/public/css/style.css" />
+</head>
+<body data-usuario-id="<%= objetivo.id %>">
+  <%- include('partials/header', { usuario: usuario, activo: 'admin' }) %>
+
+  <main class="contenedor-pagina">
+    <a href="/admin" class="enlace-volver">&larr; Volver al listado</a>
+
+    <div class="tarjeta cabecera-usuario-detalle">
+      <div>
+        <h2><%= objetivo.nombre %></h2>
+        <p class="texto-ayuda">Expediente <%= objetivo.expediente %> · Categoría <%= objetivo.categoria %></p>
+      </div>
+      <div class="tarjeta-resumen tarjeta-resumen-compacta">
+        <h3>Total de pasos</h3>
+        <p id="totalPasos" class="numero-grande">0</p>
+      </div>
+    </div>
+
+    <section class="panel-calendario">
+      <div class="cabecera-calendario">
+        <button id="btnMesAnterior" class="btn btn-icono" title="Mes anterior">&larr;</button>
+        <h2 id="tituloMes">&nbsp;</h2>
+        <button id="btnMesSiguiente" class="btn btn-icono" title="Mes siguiente">&rarr;</button>
+      </div>
+      <div class="dias-semana">
+        <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+      </div>
+      <div id="rejillaCalendario" class="rejilla-calendario"></div>
+      <div class="leyenda-calendario">
+        <span><i class="punto punto-verde"></i> Más pasos que el día anterior</span>
+        <span><i class="punto punto-amarillo"></i> Menos pasos que el día anterior</span>
+        <span><i class="punto punto-rojo"></i> Sin registrar (0 pasos)</span>
+        <span>⭐ Día con más pasos</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal de solo lectura: pasos + carrusel de evidencias -->
+  <div id="modalEvidencias" class="modal-fondo oculto">
+    <div class="modal-caja">
+      <button id="cerrarModal" class="modal-cerrar">&times;</button>
+      <h2 id="tituloModalEvidencias">Detalle del día</h2>
+      <p id="pasosModalEvidencias" class="numero-grande"></p>
+
+      <div id="carrusel" class="carrusel oculto">
+        <button id="carruselAnterior" class="btn btn-icono">&larr;</button>
+        <img id="carruselImagen" src="" alt="Evidencia" />
+        <button id="carruselSiguiente" class="btn btn-icono">&rarr;</button>
+      </div>
+      <p id="carruselContador" class="texto-ayuda"></p>
+      <p id="sinEvidencias" class="texto-ayuda oculto">No hay evidencias registradas para este día.</p>
+    </div>
+  </div>
+
+  <script src="/public/js/calendar.js"></script>
+  <script src="/public/js/admin-usuario.js"></script>
+</body>
+</html>

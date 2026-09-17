@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paso a Pasito · Administración</title>
+  <link rel="stylesheet" href="/public/css/style.css" />
+</head>
+<body>
+  <%- include('partials/header', { usuario: usuario, activo: 'admin' }) %>
+
+  <main class="contenedor-pagina">
+    <section class="tarjeta">
+      <h2>Configuración del reto</h2>
+      <form id="formConfig" class="form-en-linea">
+        <div>
+          <label>Fecha de inicio</label>
+          <input type="date" id="fechaInicio" value="<%= retoInicio %>" required />
+        </div>
+        <div>
+          <label>Fecha de fin</label>
+          <input type="date" id="fechaFin" value="<%= retoFin %>" required />
+        </div>
+        <button type="submit" class="btn btn-primario">Guardar</button>
+        <span id="mensajeConfig" class="mensaje-ok oculto">Guardado ✓</span>
+      </form>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Importar usuarios desde Excel</h2>
+      <p class="texto-ayuda">
+        El archivo debe tener columnas con encabezados que incluyan: <strong>No. Expediente</strong>,
+        <strong>Nombre</strong> y <strong>Fecha de Nacimiento</strong>. La categoría se calcula automáticamente
+        (menos de 40 años = A, 40 años o más = B) y el usuario/contraseña se generan solos.
+      </p>
+      <form id="formImportar" class="form-en-linea">
+        <input type="file" id="archivoExcel" accept=".xlsx,.xls" required />
+        <button type="submit" class="btn btn-primario">Importar</button>
+      </form>
+      <div id="resultadoImportar"></div>
+    </section>
+
+    <section class="tarjeta">
+      <div class="cabecera-con-boton">
+        <h2>Usuarios del reto</h2>
+        <button id="btnExportar" class="btn btn-secundario">Exportar a Excel</button>
+      </div>
+
+      <div class="form-en-linea filtros">
+        <div>
+          <label>Buscar por nombre o expediente</label>
+          <input type="text" id="filtroUsuario" placeholder="Ej. Juan Pérez" />
+        </div>
+        <div>
+          <label>Categoría</label>
+          <select id="filtroCategoria">
+            <option value="">Todas</option>
+            <option value="A">Categoría A</option>
+            <option value="B">Categoría B</option>
+          </select>
+        </div>
+        <div>
+          <label>Día específico</label>
+          <input type="date" id="filtroDia" />
+        </div>
+        <button id="btnLimpiarFiltros" class="btn btn-link">Limpiar filtros</button>
+      </div>
+
+      <table class="tabla-usuarios">
+        <thead>
+          <tr>
+            <th>Expediente</th>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Días registrados</th>
+            <th>Total de pasos</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTablaUsuarios"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Modal con resultado de la importación (usuario/contraseña generados) -->
+  <div id="modalCredenciales" class="modal-fondo oculto">
+    <div class="modal-caja modal-ancha">
+      <button id="cerrarModalCredenciales" class="modal-cerrar">&times;</button>
+      <h2>Usuarios creados</h2>
+      <p class="texto-ayuda">Guarda esta información ahora: las contraseñas no se muestran de nuevo.</p>
+      <div id="tablaCredenciales"></div>
+      <div id="tablaErroresImportacion"></div>
+      <div class="modal-acciones">
+        <button id="btnDescargarCredenciales" class="btn btn-primario">Descargar Excel de credenciales</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de detalle rápido de un día (evidencias) para el admin, reutilizado desde admin_usuario -->
+
+  <script src="/public/js/admin.js"></script>
+</body>
+</html>

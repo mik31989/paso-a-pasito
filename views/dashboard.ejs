@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paso a Pasito · Mi calendario</title>
+  <link rel="stylesheet" href="/public/css/style.css" />
+</head>
+<body>
+  <%- include('partials/header', { usuario: usuario, activo: 'dashboard' }) %>
+
+  <main class="contenedor-pagina">
+    <div class="layout-calendario">
+      <section class="panel-calendario">
+        <div class="cabecera-calendario">
+          <button id="btnMesAnterior" class="btn btn-icono" title="Mes anterior">&larr;</button>
+          <h2 id="tituloMes">&nbsp;</h2>
+          <button id="btnMesSiguiente" class="btn btn-icono" title="Mes siguiente">&rarr;</button>
+        </div>
+        <div class="dias-semana">
+          <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+        </div>
+        <div id="rejillaCalendario" class="rejilla-calendario"></div>
+        <div class="leyenda-calendario">
+          <span><i class="punto punto-verde"></i> Más pasos que el día anterior</span>
+          <span><i class="punto punto-amarillo"></i> Menos pasos que el día anterior</span>
+          <span><i class="punto punto-rojo"></i> Sin registrar (0 pasos)</span>
+          <span>⭐ Tu día con más pasos</span>
+        </div>
+      </section>
+
+      <aside class="panel-resumen">
+        <div class="tarjeta-resumen">
+          <h3>Total de pasos</h3>
+          <p id="totalPasos" class="numero-grande">0</p>
+          <p class="detalle-resumen">Suma de todos los días registrados</p>
+        </div>
+        <div class="tarjeta-resumen">
+          <h3>Tu categoría</h3>
+          <p class="numero-grande">Categoría <%= categoria %></p>
+          <p class="detalle-resumen">Mínimo requerido: <%= pasosMinimosCategoria.toLocaleString('es-MX') %> pasos/día</p>
+        </div>
+        <div class="tarjeta-resumen">
+          <h3>Número de empleado</h3>
+          <p class="numero-grande"><%= expediente %></p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Modal de registro de actividad -->
+  <div id="modalActividad" class="modal-fondo oculto">
+    <div class="modal-caja">
+      <button id="cerrarModal" class="modal-cerrar">&times;</button>
+      <h2>Registrar actividad</h2>
+
+      <div class="modal-fila">
+        <label>Número de empleado</label>
+        <input type="text" value="<%= expediente %>" disabled />
+      </div>
+
+      <div class="modal-fila">
+        <label>Fecha</label>
+        <input type="date" id="inputFecha" min="<%= fechaMinima %>" max="<%= hoy %>" />
+      </div>
+
+      <div class="modal-fila">
+        <label>Número de pasos (mínimo categoría <%= categoria %>: <%= pasosMinimosCategoria.toLocaleString('es-MX') %>)</label>
+        <input type="number" id="inputPasos" min="0" step="1" placeholder="Ej. 8500" />
+      </div>
+
+      <div class="modal-fila">
+        <label>Evidencias (máximo 5 imágenes)</label>
+        <input type="file" id="inputEvidencias" accept="image/*" multiple />
+        <div id="previewEvidencias" class="preview-evidencias"></div>
+        <div id="evidenciasExistentes" class="preview-evidencias"></div>
+      </div>
+
+      <p id="errorModal" class="alerta alerta-error oculto"></p>
+
+      <div class="modal-acciones">
+        <button id="btnCancelar" class="btn btn-secundario">Cancelar</button>
+        <button id="btnAceptar" class="btn btn-primario">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/public/js/calendar.js"></script>
+  <script src="/public/js/modal.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "paso-a-pasito",
+  "version": "1.0.0",
+  "description": "Reto de pasos para compañeros de trabajo - registro diario, calendario y panel de administración",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "crear-admin": "node scripts/crear-admin.js"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "exceljs": "^4.4.0",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.0"
+  }
+}

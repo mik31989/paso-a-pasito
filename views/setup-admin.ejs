@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paso a Pasito · Crear administrador</title>
+  <link rel="stylesheet" href="/public/css/style.css" />
+</head>
+<body class="pagina-login">
+  <div class="fondo-login">
+    <div class="tarjeta-login">
+      <div class="logo-login">🚶‍♂️ Paso a Pasito</div>
+      <p class="subtitulo-login">Crear el primer administrador</p>
+
+      <% if (error) { %>
+        <div class="alerta alerta-error"><%= error %></div>
+      <% } %>
+
+      <form method="POST" action="/setup-admin" class="form-login">
+        <label for="token">Token de configuración</label>
+        <input type="password" id="token" name="token" required autofocus />
+
+        <label for="nombre">Nombre completo</label>
+        <input type="text" id="nombre" name="nombre" required />
+
+        <label for="username">Usuario</label>
+        <input type="text" id="username" name="username" required />
+
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" name="password" minlength="6" required />
+
+        <button type="submit" class="btn btn-primario btn-ancho">Crear administrador</button>
+      </form>
+
+      <p class="texto-ayuda" style="margin-top:16px">
+        El token es el valor de la variable de entorno <strong>SETUP_TOKEN</strong> configurada en el hosting.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

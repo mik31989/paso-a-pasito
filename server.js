@@ -9,6 +9,7 @@ const { cargarUsuario } = require('./src/auth');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
+const setupRoutes = require('./routes/setup');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.get('/', (req, res) => {
   res.redirect(req.usuario.rol === 'admin' ? '/admin' : '/dashboard');
 });
 
+app.use(setupRoutes);
 app.use(authRoutes);
 app.use(userRoutes);
 app.use(adminRoutes);

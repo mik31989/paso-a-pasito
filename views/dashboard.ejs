@@ -10,6 +10,16 @@
   <%- include('partials/header', { usuario: usuario, activo: 'dashboard' }) %>
 
   <main class="contenedor-pagina">
+    <% if (retoFinalizado) { %>
+      <section class="tarjeta tarjeta-certificado">
+        <div>
+          <h2>🏅 ¡El reto <%= retoNombre %> ha concluido!</h2>
+          <p class="texto-ayuda">Descarga tu certificado de participación con tu total de pasos registrados.</p>
+        </div>
+        <a href="/certificado" class="btn btn-primario" target="_blank" rel="noopener">Descargar certificado (PDF)</a>
+      </section>
+    <% } %>
+
     <div class="layout-calendario">
       <section class="panel-calendario">
         <div class="cabecera-calendario">

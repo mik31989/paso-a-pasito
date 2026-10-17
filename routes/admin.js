@@ -6,7 +6,7 @@ const { db } = require('../src/db');
 const { requiereAdmin } = require('../src/auth');
 const {
   calcularCategoria,
-  generarPasswordAleatoria,
+  passwordInicial,
   construirCalendario,
 } = require('../src/utils');
 
@@ -17,7 +17,12 @@ router.use(requiereAdmin);
 
 router.get('/admin', async (req, res) => {
   const cfg = (await db.execute('SELECT * FROM reto_config WHERE id = 1')).rows[0];
-  res.render('admin', { usuario: req.usuario, retoInicio: cfg.fecha_inicio, retoFin: cfg.fecha_fin });
+  res.render('admin', {
+    usuario: req.usuario,
+    retoNombre: cfg.nombre_reto,
+    retoInicio: cfg.fecha_inicio,
+    retoFin: cfg.fecha_fin,
+  });
 });
 
 router.get('/admin/usuario/:id', async (req, res) => {
@@ -29,21 +34,25 @@ router.get('/admin/usuario/:id', async (req, res) => {
   res.render('admin_usuario', { usuario: req.usuario, objetivo: usuarioObjetivo });
 });
 
-// --- Configuración del reto (fechas de inicio y fin) ---
+// --- Configuración del reto (nombre y fechas de inicio y fin) ---
 router.post('/admin/api/config', async (req, res) => {
-  const { fecha_inicio, fecha_fin } = req.body;
+  const { nombre_reto, fecha_inicio, fecha_fin } = req.body;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha_inicio) || !/^\d{4}-\d{2}-\d{2}$/.test(fecha_fin)) {
     return res.status(400).json({ error: 'Fechas inválidas.' });
   }
+  if (!nombre_reto || !nombre_reto.trim()) {
+    return res.status(400).json({ error: 'El nombre del reto no puede estar vacío.' });
+  }
   await db.execute({
-    sql: 'UPDATE reto_config SET fecha_inicio = ?, fecha_fin = ? WHERE id = 1',
-    args: [fecha_inicio, fecha_fin],
+    sql: 'UPDATE reto_config SET nombre_reto = ?, fecha_inicio = ?, fecha_fin = ? WHERE id = 1',
+    args: [nombre_reto.trim(), fecha_inicio, fecha_fin],
   });
   res.json({ ok: true });
 });
 
 // --- Importar usuarios desde Excel ---
 // Columnas esperadas (en la primera fila, cualquier orden): No Expediente | Nombre | Fecha de Nacimiento
+// Usuario = No. de expediente. Contraseña inicial = expediente + sufijo fijo (ver src/utils.js).
 router.post('/admin/api/importar-usuarios', upload.single('archivo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Debes adjuntar un archivo de Excel.' });
 
@@ -106,9 +115,9 @@ router.post('/admin/api/importar-usuarios', upload.single('archivo'), async (req
       }
 
       const categoria = calcularCategoria(fechaNacimiento);
-      const passwordPlano = generarPasswordAleatoria(8);
-      const passwordHash = await bcrypt.hash(passwordPlano, 10);
       const username = expediente;
+      const passwordPlano = passwordInicial(username);
+      const passwordHash = await bcrypt.hash(passwordPlano, 10);
 
       await db.execute({
         sql: `INSERT INTO usuarios (expediente, nombre, fecha_nacimiento, categoria, username, password_hash, rol)
@@ -126,11 +135,16 @@ router.post('/admin/api/importar-usuarios', upload.single('archivo'), async (req
   }
 });
 
-// Genera un Excel de credenciales a partir de la lista devuelta por la importación
-// (las contraseñas en texto plano nunca se guardan en la base de datos, solo viajan aquí una vez)
-router.post('/admin/api/exportar-credenciales', async (req, res) => {
-  const { creados } = req.body;
-  if (!Array.isArray(creados)) return res.status(400).json({ error: 'Datos inválidos.' });
+// Genera (o regenera) el Excel de usuarios y contraseñas de TODOS los participantes.
+// La contraseña es determinística (expediente + sufijo fijo), así que siempre se puede
+// reconstruir sin tener que guardar texto plano en la base de datos.
+router.get('/admin/api/credenciales/exportar', async (req, res) => {
+  const usuarios = (
+    await db.execute({
+      sql: 'SELECT * FROM usuarios WHERE rol = ? ORDER BY nombre ASC',
+      args: ['usuario'],
+    })
+  ).rows;
 
   const workbook = new ExcelJS.Workbook();
   const hoja = workbook.addWorksheet('Credenciales');
@@ -139,9 +153,17 @@ router.post('/admin/api/exportar-credenciales', async (req, res) => {
     { header: 'Nombre', key: 'nombre', width: 30 },
     { header: 'Categoría', key: 'categoria', width: 12 },
     { header: 'Usuario', key: 'username', width: 18 },
-    { header: 'Contraseña', key: 'password', width: 16 },
+    { header: 'Contraseña', key: 'password', width: 20 },
   ];
-  hoja.addRows(creados);
+  hoja.addRows(
+    usuarios.map((u) => ({
+      expediente: u.expediente,
+      nombre: u.nombre,
+      categoria: u.categoria,
+      username: u.username,
+      password: passwordInicial(u.username),
+    }))
+  );
   hoja.getRow(1).font = { bold: true };
 
   res.setHeader('Content-Disposition', 'attachment; filename="credenciales-paso-a-pasito.xlsx"');
@@ -150,9 +172,67 @@ router.post('/admin/api/exportar-credenciales', async (req, res) => {
   res.end();
 });
 
-// --- Listado de usuarios con filtros ---
+// --- Cambiar perfil de un usuario (nombre, expediente, fecha de nacimiento) ---
+router.put('/admin/api/usuarios/:id', async (req, res) => {
+  const { nombre, expediente, fecha_nacimiento } = req.body;
+
+  if (!nombre || !nombre.trim() || !expediente || !expediente.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(fecha_nacimiento || '')) {
+    return res.status(400).json({ error: 'Nombre, expediente y fecha de nacimiento son obligatorios.' });
+  }
+
+  const usuarioActual = (
+    await db.execute({ sql: 'SELECT * FROM usuarios WHERE id = ?', args: [req.params.id] })
+  ).rows[0];
+  if (!usuarioActual) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+  const nuevoExpediente = expediente.trim();
+  if (nuevoExpediente !== usuarioActual.expediente) {
+    const choque = (
+      await db.execute({
+        sql: 'SELECT id FROM usuarios WHERE expediente = ? AND id != ?',
+        args: [nuevoExpediente, req.params.id],
+      })
+    ).rows[0];
+    if (choque) return res.status(400).json({ error: 'Ya existe otro usuario con ese número de expediente.' });
+  }
+
+  const categoria = calcularCategoria(fecha_nacimiento);
+  const nuevoUsername = nuevoExpediente; // el usuario de acceso siempre es el expediente
+  const nuevoPasswordHash = await bcrypt.hash(passwordInicial(nuevoUsername), 10);
+
+  await db.execute({
+    sql: `UPDATE usuarios
+          SET nombre = ?, expediente = ?, fecha_nacimiento = ?, categoria = ?, username = ?, password_hash = ?
+          WHERE id = ?`,
+    args: [nombre.trim(), nuevoExpediente, fecha_nacimiento, categoria, nuevoUsername, nuevoPasswordHash, req.params.id],
+  });
+
+  res.json({ ok: true, categoria, username: nuevoUsername });
+});
+
+// --- Borrar usuario (y sus actividades / evidencias) ---
+router.delete('/admin/api/usuarios/:id', async (req, res) => {
+  const usuarioObjetivo = (
+    await db.execute({ sql: 'SELECT * FROM usuarios WHERE id = ?', args: [req.params.id] })
+  ).rows[0];
+  if (!usuarioObjetivo) return res.status(404).json({ error: 'Usuario no encontrado.' });
+  if (usuarioObjetivo.rol === 'admin') {
+    return res.status(400).json({ error: 'No se puede eliminar una cuenta de administrador desde aquí.' });
+  }
+
+  await db.execute({
+    sql: `DELETE FROM evidencias WHERE actividad_id IN (SELECT id FROM actividades WHERE usuario_id = ?)`,
+    args: [req.params.id],
+  });
+  await db.execute({ sql: 'DELETE FROM actividades WHERE usuario_id = ?', args: [req.params.id] });
+  await db.execute({ sql: 'DELETE FROM usuarios WHERE id = ?', args: [req.params.id] });
+
+  res.json({ ok: true });
+});
+
+// --- Listado de usuarios con filtros y orden ---
 router.get('/admin/api/usuarios', async (req, res) => {
-  const { categoria, usuario, dia } = req.query;
+  const { categoria, usuario, dia, orden } = req.query;
   const cfg = (await db.execute('SELECT * FROM reto_config WHERE id = 1')).rows[0];
 
   let sql = 'SELECT * FROM usuarios WHERE rol = ?';
@@ -185,23 +265,48 @@ router.get('/admin/api/usuarios', async (req, res) => {
       id: u.id,
       expediente: u.expediente,
       nombre: u.nombre,
+      fechaNacimiento: u.fecha_nacimiento,
       categoria: u.categoria,
       diasRegistrados,
       totalPasos,
     });
   }
 
+  if (orden === 'pasos_desc') resultado.sort((a, b) => b.totalPasos - a.totalPasos);
+  else if (orden === 'pasos_asc') resultado.sort((a, b) => a.totalPasos - b.totalPasos);
+  else if (orden === 'dias_desc') resultado.sort((a, b) => b.diasRegistrados - a.diasRegistrados);
+
   res.json({ usuarios: resultado });
+});
+
+// --- Top 10 de usuarios con más pasos registrados en el periodo del reto ---
+router.get('/admin/api/top10', async (req, res) => {
+  const cfg = (await db.execute('SELECT * FROM reto_config WHERE id = 1')).rows[0];
+  const usuarios = (
+    await db.execute({ sql: 'SELECT * FROM usuarios WHERE rol = ? ORDER BY nombre ASC', args: ['usuario'] })
+  ).rows;
+
+  const resultado = [];
+  for (const u of usuarios) {
+    const actividades = (
+      await db.execute({
+        sql: 'SELECT pasos FROM actividades WHERE usuario_id = ? AND fecha BETWEEN ? AND ?',
+        args: [u.id, cfg.fecha_inicio, cfg.fecha_fin],
+      })
+    ).rows;
+    const totalPasos = actividades.reduce((s, a) => s + a.pasos, 0);
+    resultado.push({ id: u.id, nombre: u.nombre, categoria: u.categoria, totalPasos });
+  }
+
+  resultado.sort((a, b) => b.totalPasos - a.totalPasos);
+  res.json({ top: resultado.slice(0, 10) });
 });
 
 // --- Exportar tabla general: una fila por usuario, columnas = días del reto ---
 router.get('/admin/api/usuarios/exportar', async (req, res) => {
   const cfg = (await db.execute('SELECT * FROM reto_config WHERE id = 1')).rows[0];
   const usuarios = (
-    await db.execute({
-      sql: 'SELECT * FROM usuarios WHERE rol = ? ORDER BY nombre ASC',
-      args: ['usuario'],
-    })
+    await db.execute({ sql: 'SELECT * FROM usuarios WHERE rol = ? ORDER BY nombre ASC', args: ['usuario'] })
   ).rows;
 
   const fechas = [];

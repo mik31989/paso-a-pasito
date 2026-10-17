@@ -14,6 +14,10 @@
       <h2>Configuración del reto</h2>
       <form id="formConfig" class="form-en-linea">
         <div>
+          <label>Nombre del reto</label>
+          <input type="text" id="nombreReto" value="<%= retoNombre %>" required />
+        </div>
+        <div>
           <label>Fecha de inicio</label>
           <input type="date" id="fechaInicio" value="<%= retoInicio %>" required />
         </div>
@@ -31,13 +35,32 @@
       <p class="texto-ayuda">
         El archivo debe tener columnas con encabezados que incluyan: <strong>No. Expediente</strong>,
         <strong>Nombre</strong> y <strong>Fecha de Nacimiento</strong>. La categoría se calcula automáticamente
-        (menos de 40 años = A, 40 años o más = B) y el usuario/contraseña se generan solos.
+        (menos de 40 años = A, 40 años o más = B). El usuario de acceso es el número de expediente y la
+        contraseña inicial es <strong>expediente + uninet2026</strong>.
       </p>
       <form id="formImportar" class="form-en-linea">
         <input type="file" id="archivoExcel" accept=".xlsx,.xls" required />
         <button type="submit" class="btn btn-primario">Importar</button>
       </form>
       <div id="resultadoImportar"></div>
+
+      <div class="separador"></div>
+
+      <h3>Archivo de usuarios y contraseñas</h3>
+      <p class="texto-ayuda">
+        Genera en cualquier momento un Excel con el usuario y la contraseña vigente de todos los participantes.
+      </p>
+      <button id="btnRegenerarCredenciales" class="btn btn-secundario">Regenerar archivo de usuarios y contraseñas</button>
+    </section>
+
+    <section class="tarjeta">
+      <h2>🏆 Top 10 — más pasos registrados en el reto</h2>
+      <table class="tabla-usuarios">
+        <thead>
+          <tr><th>#</th><th>Nombre</th><th>Categoría</th><th>Total de pasos</th></tr>
+        </thead>
+        <tbody id="cuerpoTop10"></tbody>
+      </table>
     </section>
 
     <section class="tarjeta">
@@ -63,6 +86,15 @@
           <label>Día específico</label>
           <input type="date" id="filtroDia" />
         </div>
+        <div>
+          <label>Ordenar por</label>
+          <select id="ordenUsuarios">
+            <option value="nombre">Nombre (A-Z)</option>
+            <option value="pasos_desc">Total de pasos (mayor a menor)</option>
+            <option value="pasos_asc">Total de pasos (menor a mayor)</option>
+            <option value="dias_desc">Días registrados (mayor a menor)</option>
+          </select>
+        </div>
         <button id="btnLimpiarFiltros" class="btn btn-link">Limpiar filtros</button>
       </div>
 
@@ -87,16 +119,40 @@
     <div class="modal-caja modal-ancha">
       <button id="cerrarModalCredenciales" class="modal-cerrar">&times;</button>
       <h2>Usuarios creados</h2>
-      <p class="texto-ayuda">Guarda esta información ahora: las contraseñas no se muestran de nuevo.</p>
+      <p class="texto-ayuda">La contraseña inicial de cada usuario es su expediente + uninet2026.</p>
       <div id="tablaCredenciales"></div>
       <div id="tablaErroresImportacion"></div>
-      <div class="modal-acciones">
-        <button id="btnDescargarCredenciales" class="btn btn-primario">Descargar Excel de credenciales</button>
-      </div>
     </div>
   </div>
 
-  <!-- Modal de detalle rápido de un día (evidencias) para el admin, reutilizado desde admin_usuario -->
+  <!-- Modal para editar el perfil de un usuario -->
+  <div id="modalEditarUsuario" class="modal-fondo oculto">
+    <div class="modal-caja">
+      <button id="cerrarModalEditar" class="modal-cerrar">&times;</button>
+      <h2>Editar perfil de usuario</h2>
+
+      <div class="modal-fila">
+        <label>No. Expediente</label>
+        <input type="text" id="editarExpediente" />
+      </div>
+      <div class="modal-fila">
+        <label>Nombre</label>
+        <input type="text" id="editarNombre" />
+      </div>
+      <div class="modal-fila">
+        <label>Fecha de nacimiento</label>
+        <input type="date" id="editarFechaNacimiento" />
+        <span class="texto-ayuda">La categoría se recalcula automáticamente al guardar.</span>
+      </div>
+
+      <p id="errorEditar" class="alerta alerta-error oculto"></p>
+
+      <div class="modal-acciones">
+        <button id="btnCancelarEditar" class="btn btn-secundario">Cancelar</button>
+        <button id="btnGuardarEditar" class="btn btn-primario">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
 
   <script src="/public/js/admin.js"></script>
 </body>

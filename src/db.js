@@ -34,6 +34,7 @@ async function init() {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS reto_config (
       id INTEGER PRIMARY KEY CHECK (id = 1),
+      nombre_reto TEXT NOT NULL DEFAULT 'Paso a Pasito',
       fecha_inicio TEXT NOT NULL,
       fecha_fin TEXT NOT NULL
     );
@@ -61,14 +62,22 @@ async function init() {
     );
   `);
 
+  // Migración suave: agrega nombre_reto si la tabla reto_config ya existía sin esa columna
+  try {
+    await db.execute("ALTER TABLE reto_config ADD COLUMN nombre_reto TEXT NOT NULL DEFAULT 'Paso a Pasito'");
+  } catch (e) {
+    // La columna ya existe: no hacer nada
+  }
+
   // Config por defecto del reto si no existe
   const cfg = await db.execute('SELECT * FROM reto_config WHERE id = 1');
   if (cfg.rows.length === 0) {
+    const nombreReto = process.env.RETO_NOMBRE_DEFAULT || 'Paso a Pasito';
     const inicio = process.env.RETO_INICIO_DEFAULT || '2026-09-01';
     const fin = process.env.RETO_FIN_DEFAULT || '2026-09-30';
     await db.execute({
-      sql: 'INSERT INTO reto_config (id, fecha_inicio, fecha_fin) VALUES (1, ?, ?)',
-      args: [inicio, fin],
+      sql: 'INSERT INTO reto_config (id, nombre_reto, fecha_inicio, fecha_fin) VALUES (1, ?, ?, ?)',
+      args: [nombreReto, inicio, fin],
     });
   }
 }

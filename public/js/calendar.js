@@ -33,7 +33,7 @@ async function cargarCalendario(urlDatos) {
   pintarMesActual();
 }
 
-function pintarMesActual(alHacerClicDia) {
+function pintarMesActual() {
   const rejilla = document.getElementById('rejillaCalendario');
   const titulo = document.getElementById('tituloMes');
   if (!rejilla) return;

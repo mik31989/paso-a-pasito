@@ -1,4 +1,5 @@
 const UMBRAL_PASOS = { A: 7000, B: 9000 };
+const SUFIJO_PASSWORD = process.env.SUFIJO_PASSWORD || 'uninet2026';
 
 /** Calcula edad en años completos a partir de una fecha (YYYY-MM-DD) hasta hoy. */
 function calcularEdad(fechaNacimientoStr) {
@@ -40,13 +41,9 @@ function fechaMinimaRegistro() {
   return fechaISO(d);
 }
 
-function generarPasswordAleatoria(longitud = 8) {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-  let out = '';
-  for (let i = 0; i < longitud; i++) {
-    out += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return out;
+/** Contraseña inicial/reseteable: usuario (= expediente) + sufijo fijo. Determinística, no se guarda en texto plano. */
+function passwordInicial(username) {
+  return `${username}${SUFIJO_PASSWORD}`;
 }
 
 /**
@@ -96,12 +93,13 @@ function construirCalendario(fechaInicio, fechaFin, mapaPasos) {
 
 module.exports = {
   UMBRAL_PASOS,
+  SUFIJO_PASSWORD,
   calcularEdad,
   calcularCategoria,
   pasosMinimos,
   fechaISO,
   hoyISO,
   fechaMinimaRegistro,
-  generarPasswordAleatoria,
+  passwordInicial,
   construirCalendario,
 };

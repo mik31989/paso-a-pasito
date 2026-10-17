@@ -8,6 +8,7 @@ const {
   pasosMinimos,
   construirCalendario,
 } = require('../src/utils');
+const { generarCertificadoPDF } = require('../src/certificado');
 
 const router = express.Router();
 const upload = multer({
@@ -28,10 +29,12 @@ router.get('/dashboard', requiereSesion, async (req, res) => {
     expediente: usuarioRow.expediente,
     categoria: usuarioRow.categoria,
     pasosMinimosCategoria: pasosMinimos(usuarioRow.categoria),
+    retoNombre: cfg.nombre_reto,
     retoInicio: cfg.fecha_inicio,
     retoFin: cfg.fecha_fin,
     fechaMinima: fechaMinimaRegistro(),
     hoy: hoyISO(),
+    retoFinalizado: hoyISO() > cfg.fecha_fin,
   });
 });
 
@@ -133,6 +136,41 @@ router.post('/api/actividades', requiereSesion, upload.array('evidencias', 5), a
     console.error(err);
     res.status(500).json({ error: 'Error al registrar la actividad.' });
   }
+});
+
+// Certificado de participación en PDF (disponible solo cuando el reto ya terminó)
+router.get('/certificado', requiereSesion, async (req, res) => {
+  if (req.usuario.rol === 'admin') return res.status(403).send('No disponible para administradores.');
+
+  const cfg = (await db.execute('SELECT * FROM reto_config WHERE id = 1')).rows[0];
+  if (hoyISO() <= cfg.fecha_fin) {
+    return res.status(400).send('El certificado estará disponible cuando finalice el periodo del reto.');
+  }
+
+  const usuarioRow = (
+    await db.execute({ sql: 'SELECT * FROM usuarios WHERE id = ?', args: [req.usuario.id] })
+  ).rows[0];
+
+  const rows = (
+    await db.execute({
+      sql: 'SELECT fecha, pasos FROM actividades WHERE usuario_id = ?',
+      args: [req.usuario.id],
+    })
+  ).rows;
+  const mapaPasos = new Map(rows.map((r) => [r.fecha, r.pasos]));
+  const dias = construirCalendario(cfg.fecha_inicio, cfg.fecha_fin, mapaPasos);
+  const totalPasos = dias.reduce((sum, d) => sum + (d.pasos || 0), 0);
+
+  generarCertificadoPDF(res, {
+    nombreReto: cfg.nombre_reto,
+    fechaInicio: cfg.fecha_inicio,
+    fechaFin: cfg.fecha_fin,
+    nombreParticipante: usuarioRow.nombre,
+    expediente: usuarioRow.expediente,
+    categoria: usuarioRow.categoria,
+    totalPasos,
+    fechaEmision: hoyISO(),
+  });
 });
 
 module.exports = router;

@@ -10,6 +10,9 @@
   --texto-oscuro: #111827;
   --blanco: #ffffff;
   --radio: 12px;
+
+  --marca-oscuro: #8a2f1c;
+  --marca-claro: #da4e2b;
 }
 
 * { box-sizing: border-box; }
@@ -22,12 +25,41 @@ body {
 }
 
 /* --- Login --- */
-.pagina-login {
+.pagina-login { margin: 0; }
+
+.fondo-login {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #2563eb, #22c55e);
+  padding: 56px 20px 40px;
+  background: linear-gradient(180deg, var(--marca-oscuro) 0%, var(--marca-claro) 45%, var(--marca-claro) 100%);
+}
+
+.titulo-hero {
+  margin: 0 0 36px;
+  text-align: center;
+  font-family: 'Arial Black', Impact, 'Segoe UI', sans-serif;
+  text-transform: uppercase;
+  line-height: 0.95;
+}
+.titulo-hero .linea-1 {
+  display: block;
+  font-size: 64px;
+  font-style: italic;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 3px 3px 0 rgba(0,0,0,0.15);
+  letter-spacing: 2px;
+}
+.titulo-hero .linea-2 {
+  display: block;
+  font-size: 40px;
+  font-style: italic;
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 2px #ffffff;
+  letter-spacing: 4px;
 }
 
 .tarjeta-login {
@@ -35,7 +67,8 @@ body {
   padding: 40px;
   border-radius: var(--radio);
   width: 340px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  max-width: 100%;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
   text-align: center;
 }
 
@@ -50,6 +83,19 @@ body {
   border-radius: 8px;
   font-size: 14px;
 }
+
+.tarjeta-patrocinadores {
+  margin-top: 32px;
+  background: var(--blanco);
+  border-radius: var(--radio);
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.tarjeta-patrocinadores img { height: 40px; width: auto; margin: 0 16px; display: inline-block; }
 
 /* --- Botones --- */
 .btn {
@@ -66,9 +112,12 @@ body {
 .btn-primario:hover { background: var(--azul-oscuro); }
 .btn-secundario { background: var(--gris-borde); color: var(--texto-oscuro); }
 .btn-secundario:hover { opacity: 0.85; }
+.btn-peligro { background: #fee2e2; color: #b91c1c; }
+.btn-peligro:hover { background: #fecaca; }
 .btn-link { background: none; color: var(--azul); padding: 6px 8px; text-decoration: underline; }
 .btn-icono { background: var(--gris-borde); width: 36px; height: 36px; border-radius: 50%; font-size: 16px; }
 .btn-ancho { width: 100%; margin-top: 20px; }
+.btn-pequeno { padding: 6px 10px; font-size: 12px; }
 
 .alerta { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin: 10px 0; }
 .alerta-error { background: #fee2e2; color: #b91c1c; }
@@ -92,6 +141,17 @@ body {
 .form-logout { display: inline; }
 
 .contenedor-pagina { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+/* --- Certificado --- */
+.tarjeta-certificado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: linear-gradient(135deg, #fdf2ee, #ffffff);
+  border: 1px solid var(--marca-claro);
+}
+.tarjeta-certificado h2 { margin: 0 0 4px; }
 
 /* --- Calendario --- */
 .layout-calendario { display: grid; grid-template-columns: 1fr 300px; gap: 24px; }
@@ -188,10 +248,12 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 .tarjeta h2 { margin-top: 0; font-size: 18px; }
+.tarjeta h3 { font-size: 15px; }
 .texto-ayuda { font-size: 13px; color: var(--gris-texto); }
 .cabecera-con-boton { display: flex; justify-content: space-between; align-items: center; }
 .enlace-volver { display: inline-block; margin-bottom: 14px; color: var(--azul); text-decoration: none; font-size: 14px; font-weight: 600; }
 .cabecera-usuario-detalle { display: flex; justify-content: space-between; align-items: center; }
+.separador { height: 1px; background: var(--gris-borde); margin: 20px 0; }
 
 .form-en-linea { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
 .form-en-linea label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
@@ -206,6 +268,8 @@ body {
 .tabla-usuarios { width: 100%; border-collapse: collapse; font-size: 14px; }
 .tabla-usuarios th, .tabla-usuarios td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--gris-borde); }
 .tabla-usuarios th { color: var(--gris-texto); font-size: 12px; text-transform: uppercase; }
+.tabla-usuarios td.celda-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.celda-posicion { font-weight: 800; color: var(--marca-claro); width: 30px; }
 
 /* --- Modal --- */
 .modal-fondo {

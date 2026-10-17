@@ -1,4 +1,4 @@
-# Paso a Pasito 🚶‍♂️
+##Paso a Pasito 🚶‍♂️
 
 Reto de pasos entre compañeros de trabajo: calendario de registro diario, evidencias fotográficas,
 panel de administración con exportación a Excel y certificado de participación en PDF.

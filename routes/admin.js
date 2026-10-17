@@ -210,6 +210,25 @@ router.put('/admin/api/usuarios/:id', async (req, res) => {
   res.json({ ok: true, categoria, username: nuevoUsername });
 });
 
+// --- Borrar TODOS los participantes (deja solo las cuentas de administrador) ---
+router.delete('/admin/api/usuarios', async (req, res) => {
+  await db.execute(`
+    DELETE FROM evidencias
+    WHERE actividad_id IN (
+      SELECT a.id FROM actividades a
+      JOIN usuarios u ON u.id = a.usuario_id
+      WHERE u.rol = 'usuario'
+    )
+  `);
+  await db.execute(`
+    DELETE FROM actividades
+    WHERE usuario_id IN (SELECT id FROM usuarios WHERE rol = 'usuario')
+  `);
+  const resultado = await db.execute({ sql: 'DELETE FROM usuarios WHERE rol = ?', args: ['usuario'] });
+
+  res.json({ ok: true, eliminados: Number(resultado.rowsAffected || 0) });
+});
+
 // --- Borrar usuario (y sus actividades / evidencias) ---
 router.delete('/admin/api/usuarios/:id', async (req, res) => {
   const usuarioObjetivo = (

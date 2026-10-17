@@ -251,6 +251,7 @@ body {
 .tarjeta h3 { font-size: 15px; }
 .texto-ayuda { font-size: 13px; color: var(--gris-texto); }
 .cabecera-con-boton { display: flex; justify-content: space-between; align-items: center; }
+.grupo-botones { display: flex; gap: 10px; }
 .enlace-volver { display: inline-block; margin-bottom: 14px; color: var(--azul); text-decoration: none; font-size: 14px; font-weight: 600; }
 .cabecera-usuario-detalle { display: flex; justify-content: space-between; align-items: center; }
 .separador { height: 1px; background: var(--gris-borde); margin: 20px 0; }

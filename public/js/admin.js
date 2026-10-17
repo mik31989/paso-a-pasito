@@ -137,6 +137,26 @@ document.getElementById('btnExportar').addEventListener('click', () => {
   window.location.href = '/admin/api/usuarios/exportar';
 });
 
+// --- Eliminar TODOS los participantes (deja solo al/los administrador(es)) ---
+document.getElementById('btnEliminarTodos').addEventListener('click', async () => {
+  const confirmacion = prompt(
+    'Esto eliminará a TODOS los participantes junto con sus actividades y evidencias (las cuentas de administrador no se tocan).\n\nEsta acción no se puede deshacer.\n\nEscribe ELIMINAR para confirmar:'
+  );
+  if (confirmacion !== 'ELIMINAR') return;
+
+  const resp = await fetch('/admin/api/usuarios', { method: 'DELETE' });
+  const data = await resp.json();
+
+  if (!resp.ok) {
+    alert(data.error || 'No se pudo completar la eliminación.');
+    return;
+  }
+
+  alert(`Se eliminaron ${data.eliminados} usuario(s). Ya puedes importar el Excel de nuevo.`);
+  cargarUsuarios();
+  cargarTop10();
+});
+
 function debounce(fn, ms) {
   let t;
   return (...args) => {
